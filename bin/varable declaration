@@ -1,0 +1,6 @@
+// void main(){
+//     int age=25;
+//     double height=5.9;
+//     String name="john";
+//     bool isStudent=true;
+// print("name: $name, age: $age, height: $height, isStudent: $isStudent");}
