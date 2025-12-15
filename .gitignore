@@ -1,8 +1,19 @@
 # https://dart.dev/guides/libraries/private-files
 # Created by `dart pub`
 
+# Flutter / Dart
 build/
 .dart_tool/
-.idea/
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# IDE
+.idea/
+.vscode/
+
+# Platform build output
+android/.gradle/
+ios/Pods/
+macos/Pods/
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
