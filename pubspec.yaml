@@ -1,19 +1,22 @@
-name: new_project
-description: A new Flutter project.
+name: clean_app
+description: A Flutter mobile app with SQLite database and admin management.
 version: 1.0.0
-# repository: https://github.com/my_org/my_repo
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
   flutter: ">=3.0.0"
 
-# Add regular dependencies here.
 dependencies:
   flutter:
     sdk: flutter
   path: ^1.9.0
   url_launcher: ^6.2.1
   intl: ^0.18.0
+  sqflite: ^2.3.0
+  path_provider: ^2.1.0
+  provider: ^6.0.0
+  shared_preferences: ^2.2.0
+  flutter_datetime_picker: ^1.5.1
 
 dev_dependencies:
   flutter_test:
