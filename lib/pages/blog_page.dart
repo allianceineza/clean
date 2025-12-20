@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/database_helper.dart';
 
 class BlogPage extends StatefulWidget {
   const BlogPage({Key? key}) : super(key: key);
@@ -8,217 +9,32 @@ class BlogPage extends StatefulWidget {
 }
 
 class _BlogPageState extends State<BlogPage> {
-  // Initial blog posts
-  final List<BlogPost> _initialBlogPosts = [
-    BlogPost(
-      title: 'Repurpose old jars into candle holders',
-      shortDescription: 'Turn old glass jars into beautiful candle holders with these simple steps.',
-      category: 'Home Decor',
-      date: '11/17/2024',
-      author: 'Jack Black',
-      materials: [
-        'Old glass jars',
-        'Tealight candles or small pillar candles',
-        'Acrylic paint or spray paint',
-        'Paintbrushes or sponges',
-        'Decorative items: twine, lace, beads, ribbons, stickers, or dried flowers',
-        'Hot glue gun or craft glue',
-        'Sandpaper',
-        'Scissors',
-        'Rubbing alcohol',
-      ],
-      steps: [
-        'Clean the Jar: Wash with soap, remove labels, and clean with rubbing alcohol.',
-        'Decorate (Optional): Paint the jar or wrap it with twine or ribbon. Add beads, lace, or flowers with glue.',
-        'Add Support (Optional): Fill the base with sand, pebbles, or beans to stabilize the candle.',
-        'Insert Candle: Place a tealight or small pillar candle inside the jar.',
-        'Light & Enjoy: Ensure the jar is on a heat-resistant surface, and enjoy the glow!',
-        'Tip: Use LED candles for a safer option.',
-      ],
-      joke: 'Why did the old jar apply for a job? Because it wanted to be a part of a DIY project!',
-      imageAsset: 'assets/jar_candle.jpg', // You'll need to add this image to your assets
-    ),
-    BlogPost(
-      title: 'Create a gallery wall with old frames',
-      shortDescription: 'Transform your old frames into a stunning gallery wall with these creative ideas.',
-      category: 'Home Decor',
-      date: '11/10/2024',
-      author: 'Sarah Johnson',
-      materials: [
-        'Old picture frames of various sizes',
-        'Sandpaper',
-        'Spray paint or acrylic paint',
-        'Wall hooks and nails',
-        'Level',
-        'Measuring tape',
-      ],
-      steps: [
-        'Prepare Frames: Sand down any rough edges and paint frames in your chosen colors.',
-        'Arrange Layout: Lay frames on the floor to experiment with different arrangements.',
-        'Measure Wall Space: Determine the area where you want your gallery wall.',
-        'Create Templates: Trace frames on paper and tape templates to the wall.',
-        'Hang Frames: Use templates as guides to hang frames securely.',
-        'Add Art: Insert photos, prints, or fabric into frames.',
-      ],
-      joke: 'Why did the picture frame go to therapy? It had too many issues to hang!',
-      imageAsset: 'assets/gallery_wall.jpg',
-    ),
-    BlogPost(
-      title: 'Upcycle old t-shirts into a colorful rug',
-      shortDescription: 'Transform your old t-shirts into an easy rug with this creative DIY project.',
-      category: 'Textile Upcycling',
-      date: '11/03/2024',
-      author: 'Emma Wilson',
-      materials: [
-        'Old cotton t-shirts (5-10 depending on rug size)',
-        'Scissors',
-        'Crochet hook (size 10mm)',
-        'Non-slip rug mat (optional)',
-      ],
-      steps: [
-        'Prepare T-shirts: Cut off seams and cut t-shirts into 1-inch wide strips.',
-        'Join Strips: Tie strips together to create one long continuous "yarn".',
-        'Start Crocheting: Chain stitch to desired rug width.',
-        'Single Crochet: Work single crochet stitches back and forth.',
-        'Finish: When rug reaches desired length, cut and weave in ends.',
-        'Add Backing: Attach non-slip mat to bottom if desired.',
-      ],
-      joke: 'Why did the t-shirt go to school? It wanted to be a little more "knit"elligent!',
-      imageAsset: 'assets/tshirt_rug.jpg',
-    ),
-    BlogPost(
-      title: 'Build a bird feeder out of recycled tin',
-      shortDescription: 'Create a sustainable bird feeder from recycled tin cans.',
-      category: 'Garden & Outdoor',
-      date: '10/27/2024',
-      author: 'Mike Chen',
-      materials: [
-        'Clean tin can with label removed',
-        'Wooden spoon or dowel',
-        'Strong adhesive or epoxy',
-        'Drill',
-        'Sandpaper',
-        'Paint (optional)',
-        'Wire or string for hanging',
-      ],
-      steps: [
-        'Prepare Can: Remove label, clean thoroughly, and sand any sharp edges.',
-        'Create Perch: Drill a hole near the bottom and insert wooden spoon as a perch.',
-        'Add Drainage: Drill small holes in the bottom for drainage.',
-        'Make Hanging Holes: Drill two holes near the top opposite each other.',
-        'Decorate (Optional): Paint the can with non-toxic paint.',
-        'Assemble: Attach wire or string through hanging holes.',
-        'Fill: Add birdseed and hang in a sheltered location.',
-      ],
-      joke: 'Why did the bird feeder break up with the snow? It found someone more supportive!',
-      imageAsset: 'assets/bird_feeder.jpg',
-    ),
-    BlogPost(
-      title: 'Make planters from empty cans',
-      shortDescription: 'Transform empty cans into beautiful planters for your herbs and succulents.',
-      category: 'Garden & Outdoor',
-      date: '10/20/2024',
-      author: 'Lisa Rodriguez',
-      materials: [
-        'Empty food cans (various sizes)',
-        'Hammer and nail',
-        'Spray paint',
-        'Potting soil',
-        'Small plants or seeds',
-        'Decorative rocks or moss (optional)',
-      ],
-      steps: [
-        'Clean Cans: Remove labels and wash thoroughly with soap.',
-        'Drainage Holes: Use hammer and nail to make 3-4 holes in the bottom.',
-        'Paint Cans: Spray paint cans in desired colors and let dry completely.',
-        'Add Soil: Fill cans ¾ full with potting soil.',
-        'Plant: Add small plants or seeds according to their needs.',
-        'Decorate: Top with decorative rocks or moss.',
-        'Water Lightly: Be careful not to overwater.',
-      ],
-      joke: 'Why did the empty can go to school? Because it wanted to be a little more (can-do)!',
-      imageAsset: 'assets/can_planter.jpg',
-    ),
-  ];
-
-  // Additional blog posts for "Load More"
-  final List<BlogPost> _additionalBlogPosts = [
-    BlogPost(
-      title: 'Turn wine bottles into garden edging',
-      shortDescription: 'Create beautiful garden borders using recycled wine bottles.',
-      category: 'Garden & Outdoor',
-      date: '10/13/2024',
-      author: 'Tom Baker',
-      materials: [
-        'Empty wine bottles (green or brown work best)',
-        'Garden spade',
-        'Sand',
-        'Rubber mallet',
-      ],
-      steps: [
-        'Collect Bottles: Save wine bottles and remove labels.',
-        'Dig Trench: Dig a shallow trench along your garden border.',
-        'Add Sand: Fill bottom of trench with 1 inch of sand for stability.',
-        'Place Bottles: Insert bottles neck-down into the trench.',
-        'Secure: Pack soil around bottles and tap gently with rubber mallet.',
-        'Water: Water the soil to help settle everything in place.',
-      ],
-      joke: 'Why did the wine bottle join the garden? It wanted to be a little more grounded!',
-      imageAsset: 'assets/wine_bottle_edging.jpg',
-    ),
-    BlogPost(
-      title: 'Create storage from cardboard boxes',
-      shortDescription: 'Turn shipping boxes into stylish storage solutions.',
-      category: 'Home Organization',
-      date: '10/06/2024',
-      author: 'Rachel Green',
-      materials: [
-        'Cardboard boxes of various sizes',
-        'Wrapping paper or fabric',
-        'Mod Podge or white glue',
-        'Scissors or box cutter',
-        'Ruler',
-        'Decorative knobs (optional)',
-      ],
-      steps: [
-        'Reinforce Boxes: Tape corners and edges for extra strength.',
-        'Cover: Cut wrapping paper or fabric to fit and glue onto boxes.',
-        'Create Dividers: Cut cardboard pieces to create compartments.',
-        'Add Handles: Cut openings for handles or attach decorative knobs.',
-        'Stack: Arrange boxes to create a custom storage unit.',
-        'Label: Add labels to keep organized.',
-      ],
-      joke: 'Why was the cardboard box so good at sports? It had great boxing skills!',
-      imageAsset: 'assets/cardboard_storage.jpg',
-    ),
-  ];
-
-  List<BlogPost> _displayedPosts = [];
-  bool _showAllPosts = false;
+  List<Map<String, dynamic>> _blogPosts = [];
+  bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _displayedPosts = List.from(_initialBlogPosts);
+    _loadBlogPosts();
   }
 
-  void _loadMorePosts() {
-    setState(() {
-      if (!_showAllPosts) {
-        _displayedPosts.addAll(_additionalBlogPosts);
-        _showAllPosts = true;
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('All blog posts are already loaded!'),
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    });
+  Future<void> _loadBlogPosts() async {
+    try {
+      final posts = await DatabaseService.instance.getBlogPosts();
+      setState(() {
+        _blogPosts = posts;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading blog posts: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
-  void _showBlogDetails(BlogPost post) {
+
+  void _showBlogDetails(Map<String, dynamic> post) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -229,6 +45,18 @@ class _BlogPageState extends State<BlogPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: const Text('Blog'),
+          backgroundColor: Colors.teal,
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Blog'),
@@ -244,7 +72,7 @@ class _BlogPageState extends State<BlogPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  '5 DIY to do at Home',
+                  'DIY Blog Posts',
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -262,62 +90,36 @@ class _BlogPageState extends State<BlogPage> {
               ],
             ),
           ),
-          
+
           // Blog Posts List
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _displayedPosts.length + 1, // +1 for the Load More button
-              itemBuilder: (context, index) {
-                if (index < _displayedPosts.length) {
-                  final post = _displayedPosts[index];
-                  return Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () => _showBlogDetails(post),
-                        child: _buildBlogCard(post),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  );
-                } else {
-                  // Load More Button
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    child: Center(
-                      child: ElevatedButton(
-                        onPressed: _loadMorePosts,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.teal,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 40,
-                            vertical: 16,
+            child: _blogPosts.isEmpty
+                ? const Center(
+                    child: Text('No blog posts available'),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _blogPosts.length,
+                    itemBuilder: (context, index) {
+                      final post = _blogPosts[index];
+                      return Column(
+                        children: [
+                          GestureDetector(
+                            onTap: () => _showBlogDetails(post),
+                            child: _buildBlogCard(post),
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: Text(
-                          _showAllPosts ? 'All Posts Loaded' : 'Load More',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                }
-              },
-            ),
+                          const SizedBox(height: 16),
+                        ],
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBlogCard(BlogPost post) {
+  Widget _buildBlogCard(Map<String, dynamic> post) {
     return Card(
       elevation: 4,
       shape: RoundedRectangleBorder(
@@ -365,7 +167,7 @@ class _BlogPageState extends State<BlogPage> {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        post.category,
+                        post['category'] ?? 'DIY',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -375,7 +177,7 @@ class _BlogPageState extends State<BlogPage> {
                     ),
                     const Spacer(),
                     Text(
-                      post.date,
+                      post['date'] ?? '',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.grey.shade600,
@@ -385,7 +187,7 @@ class _BlogPageState extends State<BlogPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  post.title,
+                  post['title'] ?? '',
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -394,7 +196,7 @@ class _BlogPageState extends State<BlogPage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  post.shortDescription,
+                  post['shortDescription'] ?? '',
                   style: TextStyle(
                     fontSize: 15,
                     color: Colors.grey.shade700,
@@ -415,7 +217,7 @@ class _BlogPageState extends State<BlogPage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'By ${post.author}',
+                      'By ${post['author'] ?? ''}',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey.shade600,
@@ -452,7 +254,7 @@ class _BlogPageState extends State<BlogPage> {
 }
 
 class BlogDetailPage extends StatelessWidget {
-  final BlogPost blogPost;
+  final Map<String, dynamic> blogPost;
 
   const BlogDetailPage({Key? key, required this.blogPost}) : super(key: key);
 
@@ -481,7 +283,7 @@ class BlogDetailPage extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    blogPost.category,
+                    blogPost['category'] ?? 'DIY',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w500,
@@ -491,7 +293,7 @@ class BlogDetailPage extends StatelessWidget {
                 ),
                 const Spacer(),
                 Text(
-                  blogPost.date,
+                  blogPost['date'] ?? '',
                   style: TextStyle(
                     fontSize: 14,
                     color: Colors.grey.shade600,
@@ -500,10 +302,10 @@ class BlogDetailPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 20),
-            
+
             // Title
             Text(
-              blogPost.title,
+              blogPost['title'] ?? '',
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
@@ -511,7 +313,7 @@ class BlogDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            
+
             // Author
             Row(
               children: [
@@ -526,7 +328,7 @@ class BlogDetailPage extends StatelessWidget {
                 ),
                 const SizedBox(width: 10),
                 Text(
-                  blogPost.author,
+                  blogPost['author'] ?? '',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -536,7 +338,7 @@ class BlogDetailPage extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 30),
-            
+
             // Short Description
             Container(
               padding: const EdgeInsets.all(16),
@@ -546,7 +348,7 @@ class BlogDetailPage extends StatelessWidget {
                 border: Border.all(color: Colors.teal.shade100),
               ),
               child: Text(
-                blogPost.shortDescription,
+                blogPost['shortDescription'] ?? '',
                 style: TextStyle(
                   fontSize: 16,
                   color: Colors.teal.shade800,
@@ -555,7 +357,7 @@ class BlogDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 30),
-            
+
             // Joke Section
             Container(
               padding: const EdgeInsets.all(16),
@@ -586,7 +388,7 @@ class BlogDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    blogPost.joke,
+                    blogPost['joke'] ?? '',
                     style: TextStyle(
                       fontSize: 16,
                       fontStyle: FontStyle.italic,
@@ -598,7 +400,7 @@ class BlogDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 40),
-            
+
             // Materials Required
             const Text(
               'Materials Required:',
@@ -609,9 +411,9 @@ class BlogDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 15),
-            ...blogPost.materials.asMap().entries.map((entry) {
+            ...(blogPost['materials'] as List<dynamic>? ?? []).asMap().entries.map((entry) {
               final index = entry.key;
-              final material = entry.value;
+              final material = entry.value as String;
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: Row(
@@ -651,7 +453,7 @@ class BlogDetailPage extends StatelessWidget {
               );
             }).toList(),
             const SizedBox(height: 40),
-            
+
             // Steps
             const Text(
               'Steps:',
@@ -662,9 +464,9 @@ class BlogDetailPage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 15),
-            ...blogPost.steps.asMap().entries.map((entry) {
+            ...(blogPost['steps'] as List<dynamic>? ?? []).asMap().entries.map((entry) {
               final index = entry.key;
-              final step = entry.value;
+              final step = entry.value as String;
               return Card(
                 margin: const EdgeInsets.only(bottom: 16),
                 elevation: 2,
@@ -711,7 +513,7 @@ class BlogDetailPage extends StatelessWidget {
               );
             }).toList(),
             const SizedBox(height: 30),
-            
+
             // Share Button
             SizedBox(
               width: double.infinity,

@@ -4,8 +4,6 @@ import 'support_screen.dart';
 import 'billing_screen.dart';
 import 'more_screen.dart';
 
-
-
 class MainScreen extends StatefulWidget {
   const MainScreen({Key? key}) : super(key: key);
 
@@ -23,9 +21,9 @@ class _MainScreenState extends State<MainScreen> {
     super.initState();
     _screens = <Widget>[
       HomeScreen(onTabChange: _onItemTapped),
-      SupportScreen(),
-      BillingScreen(),
-      MoreScreen(),
+      const SupportScreen(),
+      const BillingScreen(),
+      const MoreScreen(),
     ];
   }
 
@@ -38,7 +36,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: IndexedStack(
         index: _selectedIndex,
         children: _screens,
@@ -66,9 +64,10 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.teal,
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: TextStyle(fontWeight: FontWeight.w600),
+        selectedItemColor: Theme.of(context).primaryColor,  // Use theme
+        unselectedItemColor: Colors.grey[600],
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal),
         onTap: _onItemTapped,
       ),
     );

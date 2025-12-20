@@ -1,151 +1,437 @@
 import 'package:flutter/material.dart';
+import '../services/database_helper.dart';
+import '../services/auth_service.dart';
 
-class EventsPage extends StatelessWidget {
+class EventsPage extends StatefulWidget {
   const EventsPage({Key? key}) : super(key: key);
+
+  @override
+  State<EventsPage> createState() => _EventsPageState();
+}
+
+class _EventsPageState extends State<EventsPage> {
+  List<Map<String, dynamic>> _events = [];
+  bool _isLoading = true;
+  String _selectedMonth = "All";
+  final List<String> _months = [
+    "All",
+    "January", "February", "March", "April", "May", "June",
+    "July", "August", "September", "October", "November", "December"
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize AuthService if not logged in (for testing)
+    if (!AuthService.isLoggedIn) {
+      AuthService.login('user@example.com', AuthService.currentUserRole ?? AuthService.UserRole.user);
+    }
+    _loadEvents();
+  }
+
+  Future<void> _loadEvents() async {
+    try {
+      final events = await DatabaseService.instance.getEvents();
+      // Filter by month if not "All"
+      List<Map<String, dynamic>> filteredEvents = events;
+      if (_selectedMonth != "All") {
+        filteredEvents = events.where((event) {
+          final date = DateTime.parse(event['date']);
+          final monthNames = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+          ];
+          return monthNames[date.month - 1] == _selectedMonth;
+        }).toList();
+      }
+      setState(() {
+        _events = filteredEvents;
+        _isLoading = false;
+      });
+    } catch (e) {
+      print('Error loading events: $e');
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  bool _isAdmin() {
+    return AuthService.isAdmin();
+  }
+
+  // Method to show create event form
+  void _showCreateEventDialog(BuildContext context) {
+    final _titleController = TextEditingController();
+    final _descController = TextEditingController();
+    final _locationController = TextEditingController();
+    final _timeController = TextEditingController();
+    DateTime _selectedDate = DateTime.now().add(Duration(days: 7));
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Create New Event'),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    TextField(
+                      controller: _titleController,
+                      decoration: InputDecoration(
+                        labelText: 'Event Title *',
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter event title',
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    TextField(
+                      controller: _descController,
+                      decoration: InputDecoration(
+                        labelText: 'Description *',
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter event description',
+                      ),
+                      maxLines: 3,
+                    ),
+                    SizedBox(height: 10),
+                    TextField(
+                      controller: _locationController,
+                      decoration: InputDecoration(
+                        labelText: 'Location *',
+                        border: OutlineInputBorder(),
+                        hintText: 'Enter event location',
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _timeController,
+                            decoration: InputDecoration(
+                              labelText: 'Time *',
+                              border: OutlineInputBorder(),
+                              hintText: 'e.g., 2:00 PM',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: 15),
+                    ElevatedButton.icon(
+                      icon: Icon(Icons.calendar_today),
+                      label: Text('Select Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+                      onPressed: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _selectedDate,
+                          firstDate: DateTime.now(),
+                          lastDate: DateTime(2025, 12, 31),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            _selectedDate = date;
+                          });
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.teal,
+                        foregroundColor: Colors.white,
+                        minimumSize: Size(double.infinity, 50),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('Cancel', style: TextStyle(color: Colors.red)),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (_titleController.text.isEmpty ||
+                        _descController.text.isEmpty ||
+                        _locationController.text.isEmpty ||
+                        _timeController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Please fill all required fields'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                      return;
+                    }
+
+                    try {
+                      await DatabaseService.instance.createEvent({
+                        'title': _titleController.text,
+                        'description': _descController.text,
+                        'location': _locationController.text,
+                        'date': _selectedDate.toIso8601String(),
+                        'time': _timeController.text,
+                        'organizer': AuthService.getCurrentUserName(),
+                        'category': 'community',
+                        'participants': 0,
+                        'rsvps': [],
+                      });
+
+                      Navigator.pop(context);
+                      _loadEvents(); // Refresh events
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('✅ Event created successfully!'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    } catch (e) {
+                      print('Error creating event: $e');
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Error creating event: $e'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.teal,
+                    foregroundColor: Colors.white,
+                  ),
+                  child: Text('Create Event'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffF8F8F8),
+      floatingActionButton: _isAdmin()
+          ? FloatingActionButton(
+              onPressed: () {
+                _showCreateEventDialog(context);
+              },
+              backgroundColor: Colors.teal,
+              child: Icon(Icons.add),
+              tooltip: 'Create New Event',
+            )
+          : null,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 10),
-
-              // Back + Title
-              Row(
+        child: Column(
+          children: [
+            // App Bar Section
+            Container(
+              color: Colors.white,
+              padding: EdgeInsets.all(16),
+              child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                    icon: Icon(Icons.arrow_back, color: Colors.black),
                     onPressed: () => Navigator.pop(context),
                   ),
-                  const SizedBox(width: 5),
-                  const Text(
+                  SizedBox(width: 10),
+                  Text(
                     "Events",
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+                  Spacer(),
+                  if (_isAdmin())
+                    IconButton(
+                      icon: Icon(Icons.add, color: Colors.teal),
+                      onPressed: () {
+                        _showCreateEventDialog(context);
+                      },
+                      tooltip: 'Create Event',
+                    ),
                 ],
               ),
-
-              const SizedBox(height: 20),
-
-              // Location Section
-              const Text(
-                "Your Location:",
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 10),
-
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey.shade300),
-                  color: Colors.white,
-                ),
-                child: Row(
-                  children: const [
-                    Icon(Icons.location_on_outlined, color: Colors.black54),
-                    SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        "Nyarugenge, Kiyovu",
-                        style: TextStyle(fontSize: 15),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 8),
-
-              Center(
-                child: TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "Change Location",
-                    style: TextStyle(
-                      color: Colors.teal,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-
-              // All Events + Month Dropdown
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    "All Events:",
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.grey.shade300),
-                      color: Colors.white,
-                    ),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: "July",
-                        items: const [
-                          DropdownMenuItem(value: "July", child: Text("July")),
-                          DropdownMenuItem(value: "August", child: Text("August")),
-                          DropdownMenuItem(value: "September", child: Text("September")),
-                        ],
-                        onChanged: (value) {},
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 15),
-
-              // Expanded ListView of Events
-              Expanded(
-                child: ListView(
+            ),
+            
+            // Content Section
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    eventCard("02", "Temple Cleaning Program",
-                        "Thu, 8 am .44621 Gasabo, Kacyiru"),
-                    eventCard("04", "Afforestation Program",
-                        "Sat, 11 am .Nyarugenge, Gitega"),
-                    eventCard("11", "Street Cleanup",
-                        "Sun, 9 am .Gasabo, Remera"),
-                    eventCard("16", "Public Gardening Project",
-                        "Wed, 10 am .Nyarugenge, Norvage"),
-                    eventCard("24", "Street Art Workshop",
-                        "Fri, 2 pm .Nyarugenge, Nyamirambo"),
+                    SizedBox(height: 20),
+
+                    // Location Section
+                    const Text(
+                      "Your Location:",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.grey.shade300),
+                        color: Colors.white,
+                      ),
+                      child: Row(
+                        children: const [
+                          Icon(Icons.location_on_outlined, color: Colors.black54),
+                          SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              "Nyarugenge, Kiyovu",
+                              style: TextStyle(fontSize: 15),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    Center(
+                      child: TextButton(
+                        onPressed: () {},
+                        child: const Text(
+                          "Change Location",
+                          style: TextStyle(
+                            color: Colors.teal,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // All Events + Month Dropdown
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "All Events:",
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.grey.shade300),
+                            color: Colors.white,
+                          ),
+                          child: DropdownButtonHideUnderline(
+                            child: DropdownButton<String>(
+                              value: _selectedMonth,
+                              items: _months.map((month) {
+                                return DropdownMenuItem(
+                                  value: month,
+                                  child: Text(month),
+                                );
+                              }).toList(),
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _selectedMonth = value;
+                                    _isLoading = true;
+                                  });
+                                  _loadEvents();
+                                }
+                              },
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Events List
+                    Expanded(
+                      child: _isLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : _events.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(Icons.event_note, size: 64, color: Colors.grey[400]),
+                                      SizedBox(height: 16),
+                                      Text(
+                                        'No events found',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      if (_selectedMonth != "All")
+                                        Text(
+                                          'for $_selectedMonth',
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: Colors.grey[500],
+                                          ),
+                                        ),
+                                      SizedBox(height: 20),
+                                      if (_isAdmin())
+                                        ElevatedButton.icon(
+                                          icon: Icon(Icons.add),
+                                          label: Text('Create Your First Event'),
+                                          onPressed: () {
+                                            _showCreateEventDialog(context);
+                                          },
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.teal,
+                                            foregroundColor: Colors.white,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                )
+                              : RefreshIndicator(
+                                  onRefresh: _loadEvents,
+                                  child: ListView.builder(
+                                    itemCount: _events.length,
+                                    itemBuilder: (context, index) {
+                                      final event = _events[index];
+                                      return _buildEventCard(event);
+                                    },
+                                  ),
+                                ),
+                    ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // ───────────────────────────────
-  // Event Card Widget
-  // ───────────────────────────────
-  Widget eventCard(String date, String title, String subtitle) {
+  Widget _buildEventCard(Map<String, dynamic> event) {
+    final date = DateTime.parse(event['date']);
+    final day = date.day.toString();
+    final weekday = _getWeekday(date.weekday);
+    final month = _getMonthName(date.month);
+    
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       padding: const EdgeInsets.all(14),
@@ -161,71 +447,181 @@ class EventsPage extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date Square
-          Container(
-            height: 55,
-            width: 55,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              color: Colors.grey.shade100,
-            ),
-            child: Center(
-              child: Text(
-                date,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
+          Row(
+            children: [
+              // Date Square
+              Container(
+                height: 55,
+                width: 55,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(12),
+                  color: Colors.teal.withOpacity(0.1),
+                  border: Border.all(color: Colors.teal),
                 ),
-              ),
-            ),
-          ),
-
-          const SizedBox(width: 15),
-
-          // Title + Subtitle
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
+                child: Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        day,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.teal,
+                        ),
+                      ),
+                      Text(
+                        month.substring(0, 3),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.teal,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
+              ),
+
+              const SizedBox(width: 15),
+
+              // Title + Subtitle
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      event['title'] ?? 'Untitled Event',
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '$weekday, ${event['time'] ?? 'TBD'} • ${event['location'] ?? 'Location TBD'}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 12),
+          
+          // Description
+          if (event['description'] != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Text(
+                event['description']!,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[700],
+                ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          
+          // Participants and RSVP Button
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.people_outline, size: 16, color: Colors.grey[600]),
+                  SizedBox(width: 4),
+                  Text(
+                    '${event['participants'] ?? 0} attending',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                    ),
+                  ),
+                ],
+              ),
+              
+              ElevatedButton(
+                onPressed: () async {
+                  try {
+                    if (!AuthService.isLoggedIn) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Please login to RSVP'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
+                      return;
+                    }
+
+                    final currentUser = AuthService.currentUser;
+                    if (currentUser != null) {
+                      await DatabaseService.instance.rsvpToEvent(
+                        event['id'],
+                        currentUser['id'] ?? 1,
+                        currentUser['firstName'] ?? 'User',
+                      );
+                      
+                      // Refresh events
+                      _loadEvents();
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('✅ You\'ve RSVP\'d to this event!'),
+                          backgroundColor: Colors.teal,
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    print('Error RSVPing: $e');
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error RSVPing: $e'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF0B8A6E),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                ),
+                child: const Text(
+                  "RSVP",
                   style: TextStyle(
                     fontSize: 13,
-                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ],
-            ),
-          ),
-
-          // RSVP Button
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFF0B8A6E),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Text(
-              "RSVP",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
               ),
-            ),
+            ],
           ),
         ],
       ),
     );
+  }
+
+  String _getWeekday(int weekday) {
+    const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+    return weekdays[weekday - 1];
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'January', 'February', 'March', 'April', 'May', 'June',
+      'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[month - 1];
   }
 }

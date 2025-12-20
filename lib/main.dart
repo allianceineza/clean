@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+// Import your app files
 import 'pages/schedule_page.dart';
 import 'pages/recycle_page.dart';
 import 'pages/events_page.dart';
@@ -11,7 +13,14 @@ import 'screens/billing_screen.dart';
 import 'screens/more_screen.dart';
 import 'screens/main_screen.dart';
 
+// Database imports - simple and clean
+import 'database/database_helper.dart';
+
 void main() {
+  // Initialize database FIRST
+  DatabaseHelper.initialize();
+  
+  // Run the app
   runApp(const CleanRouteApp());
 }
 
@@ -23,11 +32,6 @@ class CleanRouteApp extends StatelessWidget {
     return MaterialApp(
       title: 'CleanRoute Tech',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        primarySwatch: Colors.teal,
-        scaffoldBackgroundColor: const Color(0xFFF5F5F5),
-      ),
-      // Define routes here
       initialRoute: '/',
       routes: {
         '/': (context) => const MainScreen(),
