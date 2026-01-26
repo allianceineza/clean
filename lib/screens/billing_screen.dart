@@ -1,7 +1,16 @@
 import 'package:flutter/material.dart';
 
 class BillingScreen extends StatefulWidget {
-  const BillingScreen({Key? key}) : super(key: key);
+  final String? donationAmount;
+  final String? campaignName;
+  final String? message;
+
+  const BillingScreen({
+    Key? key,
+    this.donationAmount,
+    this.campaignName,
+    this.message,
+  }) : super(key: key);
 
   @override
   State<BillingScreen> createState() => _BillingScreenState();
@@ -19,10 +28,30 @@ class _BillingScreenState extends State<BillingScreen> {
     'January': {'amount': 374, 'status': 'paid', 'date': '2024-01-15'},
   };
 
+  bool get isDonation => widget.donationAmount != null;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
+      appBar: isDonation
+          ? AppBar(
+              backgroundColor: Colors.white,
+              elevation: 0,
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: const Text(
+                'Complete Payment',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            )
+          : null,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -30,155 +59,255 @@ class _BillingScreenState extends State<BillingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
+                // Header (only show if not donation)
+                if (!isDonation) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Billing & Payments',
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C3E50),
+                            ),
+                          ),
+                          const SizedBox(height: 5),
+                          Text(
+                            'Manage your bills and payments',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          IconButton(
+                            icon: Icon(Icons.notifications, color: Colors.teal),
+                            onPressed: () {},
+                          ),
+                          const SizedBox(width: 10),
+                          const CircleAvatar(
+                            backgroundColor: Colors.grey,
+                            child: Icon(Icons.person, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 25),
+                ],
+
+                // Donation Info Card (if donation)
+                if (isDonation) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.green[700]!, Colors.green[500]!],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.green.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.eco, color: Colors.white, size: 32),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                'Donation Payment',
+                                style: TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'Campaign:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.campaignName ?? '',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Amount:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white.withOpacity(0.9),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'RWF ${widget.donationAmount}',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        if (widget.message != null && widget.message!.isNotEmpty) ...[
+                          const SizedBox(height: 16),
+                          Text(
+                            'Your Message:',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white.withOpacity(0.9),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            widget.message!,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.white,
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 25),
+                ],
+
+                // Due Amount Card (only show if not donation)
+                if (!isDonation) ...[
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Billing & Payments',
+                          'Due Amount:',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Rs. 500',
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
                             color: Color(0xFF2C3E50),
                           ),
                         ),
-                        const SizedBox(height: 5),
+                        const SizedBox(height: 8),
                         Text(
-                          'Manage your bills and payments',
+                          'Month: July',
                           style: TextStyle(
                             fontSize: 14,
-                            color: Colors.grey[600],
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          children: [
+                            Text(
+                              'Status: ',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                            Text(
+                              'Unpaid',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.red,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'ID No: 42008977776',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[700],
+                          ),
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              _showPaymentDialog(context);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Color(0xFF2C5F6F),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'Pay Now',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    Row(
-                      children: [
-                        IconButton(
-                          icon: Icon(Icons.notifications, color: Colors.teal),
-                          onPressed: () {
-                            // Handle notification tap
-                          },
-                        ),
-                        const SizedBox(width: 10),
-                        const CircleAvatar(
-                          backgroundColor: Colors.grey,
-                          child: Icon(Icons.person, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 25),
-
-                // Due Amount Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
-                        blurRadius: 10,
-                        offset: Offset(0, 4),
-                      ),
-                    ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Due Amount:',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Rs. 500',
-                        style: TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2C3E50),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Month: July',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Row(
-                        children: [
-                          Text(
-                            'Status: ',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                          Text(
-                            'Unpaid',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.red,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'ID No: 42008977776',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[700],
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            _showPaymentDialog(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Color(0xFF2C5F6F),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: Text(
-                            'Pay Now',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 25),
+                  const SizedBox(height: 25),
+                ],
 
-                // Payment Options
+                // Payment Methods
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.blue[50],
+                    color: isDonation ? Colors.green[50] : Colors.blue[50],
                     borderRadius: BorderRadius.circular(15),
                   ),
                   child: Column(
@@ -194,7 +323,9 @@ class _BillingScreenState extends State<BillingScreen> {
                       ),
                       const SizedBox(height: 15),
                       Text(
-                        'Choose your preferred payment method.',
+                        isDonation
+                            ? 'Choose your payment method to complete your donation.'
+                            : 'Choose your preferred payment method.',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -205,185 +336,208 @@ class _BillingScreenState extends State<BillingScreen> {
                 ),
                 const SizedBox(height: 25),
 
-                // Action Buttons Row 1
+                // Payment Options
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _buildActionButton(
+                    _buildPaymentMethodCard(
+                      icon: Icons.phone_android,
+                      label: 'Mobile Money',
+                      onPressed: () => _showMobileMoneyDialog(context),
+                    ),
+                    _buildPaymentMethodCard(
                       icon: Icons.credit_card,
-                      label: 'Pay Now',
-                      color: Colors.green,
-                      onPressed: () {
-                        _showPaymentDialog(context);
-                      },
+                      label: 'Credit Card',
+                      onPressed: () => _showCreditCardDialog(context),
                     ),
-                    _buildActionButton(
-                      icon: Icons.payment,
-                      label: 'Auto Pay',
-                      color: Colors.blue,
-                      onPressed: () {
-                        _showAutoPayDialog(context);
-                      },
-                    ),
-                    _buildActionButton(
-                      icon: Icons.history,
-                      label: 'History',
-                      color: Colors.orange,
-                      onPressed: () {
-                        // Scroll to payment history section
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Scroll down to view payment history'),
-                            backgroundColor: Colors.orange,
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 15),
-
-                // Action Buttons Row 2
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildActionButton(
-                      icon: Icons.add_card,
-                      label: 'Add Card',
-                      color: Colors.purple,
-                      onPressed: () {
-                        _showAddCardDialog(context);
-                      },
-                    ),
-                    _buildActionButton(
-                      icon: Icons.receipt_long,
-                      label: 'Invoices',
-                      color: Colors.red,
-                      onPressed: () {
-                        _showInvoicesDialog(context);
-                      },
-                    ),
-                    _buildActionButton(
-                      icon: Icons.help_outline,
-                      label: 'Support',
-                      color: Colors.grey,
-                      onPressed: () {
-                        _showSupportDialog(context);
-                      },
+                    _buildPaymentMethodCard(
+                      icon: Icons.account_balance,
+                      label: 'Bank Transfer',
+                      onPressed: () => _showBankTransferDialog(context),
                     ),
                   ],
                 ),
                 const SizedBox(height: 25),
 
-                // Billing Info Card
-                Container(
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(15),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.grey.withOpacity(0.1),
-                        spreadRadius: 2,
-                        blurRadius: 5,
-                        offset: const Offset(0, 3),
+                // Action Buttons (only show if not donation)
+                if (!isDonation) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _buildActionButton(
+                        icon: Icons.payment,
+                        label: 'Auto Pay',
+                        color: Colors.blue,
+                        onPressed: () {
+                          _showAutoPayDialog(context);
+                        },
+                      ),
+                      _buildActionButton(
+                        icon: Icons.history,
+                        label: 'History',
+                        color: Colors.orange,
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Scroll down to view payment history'),
+                              backgroundColor: Colors.orange,
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildActionButton(
+                        icon: Icons.help_outline,
+                        label: 'Support',
+                        color: Colors.grey,
+                        onPressed: () {
+                          _showSupportDialog(context);
+                        },
                       ),
                     ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  const SizedBox(height: 25),
+                ],
+
+                // Rest of the billing screen content (only if not donation)
+                if (!isDonation) ...[
+                  // Billing Info Card
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(15),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          spreadRadius: 2,
+                          blurRadius: 5,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Billing Information',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C3E50),
+                          ),
+                        ),
+                        const SizedBox(height: 15),
+                        Row(
+                          children: [
+                            Icon(Icons.calendar_today, color: Colors.teal),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Next Bill Date: Aug 15, 2024',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Row(
+                          children: [
+                            Icon(Icons.attach_money, color: Colors.teal),
+                            const SizedBox(width: 10),
+                            Text(
+                              'Amount Due: Rs. 500',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+
+                  // Payment History
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Billing Information',
+                        'Payment History:',
                         style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
                           color: Color(0xFF2C3E50),
                         ),
                       ),
-                      const SizedBox(height: 15),
-                      Row(
-                        children: [
-                          Icon(Icons.calendar_today, color: Colors.teal),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Next Bill Date: Aug 15, 2024',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Icon(Icons.attach_money, color: Colors.teal),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Amount Due: Rs. 500',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 10),
-                      Row(
-                        children: [
-                          Icon(Icons.account_balance_wallet, color: Colors.teal),
-                          const SizedBox(width: 10),
-                          Text(
-                            'Payment Method: **** 1234',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: Colors.grey[700],
-                            ),
-                          ),
-                        ],
+                      Text(
+                        '2024',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                        ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 30),
+                  const SizedBox(height: 15),
 
-                // Payment History Header
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Payment History:',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Color(0xFF2C3E50),
-                      ),
-                    ),
-                    Text(
-                      '2024',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 15),
-
-                // Payment History List
-                ...paymentHistory.entries.map((entry) {
-                  return _buildPaymentHistoryItem(
-                    entry.key,
-                    entry.value['amount'],
-                    entry.value['status'],
-                    entry.value['date'],
-                  );
-                }).toList(),
-                const SizedBox(height: 20),
+                  ...paymentHistory.entries.map((entry) {
+                    return _buildPaymentHistoryItem(
+                      entry.key,
+                      entry.value['amount'],
+                      entry.value['status'],
+                      entry.value['date'],
+                    );
+                  }).toList(),
+                  const SizedBox(height: 20),
+                ],
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPaymentMethodCard({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Expanded(
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          margin: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: Colors.grey[300]!),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 5,
+                offset: Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              Icon(icon, size: 40, color: Colors.green[700]),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF2C3E50),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -537,6 +691,268 @@ class _BillingScreenState extends State<BillingScreen> {
     );
   }
 
+  // Payment method dialogs
+  void _showMobileMoneyDialog(BuildContext context) {
+    final phoneController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.phone_android, color: Colors.green[700]),
+            const SizedBox(width: 10),
+            Text('Mobile Money Payment'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: phoneController,
+              decoration: InputDecoration(
+                labelText: 'Phone Number',
+                hintText: '+250 7XX XXX XXX',
+                prefixIcon: Icon(Icons.phone),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              isDonation
+                  ? 'Amount: RWF ${widget.donationAmount}'
+                  : 'Amount: Rs. 500',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.green[700],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              phoneController.dispose();
+              Navigator.pop(context);
+            },
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              phoneController.dispose();
+              Navigator.pop(context);
+              _showSuccessDialog();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green[700],
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text('Pay Now', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showCreditCardDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.credit_card, color: Colors.blue),
+            const SizedBox(width: 10),
+            Text('Credit Card Payment'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              decoration: InputDecoration(
+                labelText: 'Card Number',
+                hintText: '**** **** **** ****',
+                prefixIcon: Icon(Icons.credit_card),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              keyboardType: TextInputType.number,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'Expiry',
+                      hintText: 'MM/YY',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      labelText: 'CVV',
+                      hintText: '***',
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                    ),
+                    keyboardType: TextInputType.number,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _showSuccessDialog();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.blue,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text('Pay Now', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBankTransferDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        title: Row(
+          children: [
+            Icon(Icons.account_balance, color: Colors.purple),
+            const SizedBox(width: 10),
+            Text('Bank Transfer'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Transfer to:'),
+            const SizedBox(height: 10),
+            Text('Bank: Bank of Kigali', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text('Account: 1234567890', style: TextStyle(fontWeight: FontWeight.w600)),
+            Text('Name: CleanRoute Rwanda', style: TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 15),
+            Text(
+              isDonation
+                  ? 'Amount: RWF ${widget.donationAmount}'
+                  : 'Amount: Rs. 500',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.purple,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Close'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Please complete the bank transfer manually'),
+                  backgroundColor: Colors.purple,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.purple,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            child: Text('Got It', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showSuccessDialog() {
+    final trees = isDonation 
+        ? (int.parse(widget.donationAmount!) / 1000).toStringAsFixed(0)
+        : '0';
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: Icon(
+          isDonation ? Icons.eco : Icons.check_circle,
+          color: Colors.green,
+          size: 80,
+        ),
+        title: Text(
+          isDonation ? 'Murakoze! Thank You!' : 'Payment Successful!',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          isDonation
+              ? 'Your donation of RWF ${widget.donationAmount} to "${widget.campaignName}" will plant approximately $trees trees!\n\nTogether, we are making Rwanda greener and fighting climate change. 🌳🇷🇼'
+              : 'Your payment of Rs. 500 has been processed successfully!',
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close success dialog
+              if (isDonation) {
+                Navigator.pop(context); // Go back to donate page
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.green,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32,
+                vertical: 12,
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Text(
+              'Done',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showPaymentDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -551,12 +967,7 @@ class _BillingScreenState extends State<BillingScreen> {
           ElevatedButton(
             onPressed: () {
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Payment processed successfully!'),
-                  backgroundColor: Colors.green,
-                ),
-              );
+              _showSuccessDialog();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
             child: Text('Pay Now'),
@@ -589,82 +1000,6 @@ class _BillingScreenState extends State<BillingScreen> {
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.blue),
             child: Text('Enable'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showAddCardDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Add Payment Card'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Card Number',
-                border: OutlineInputBorder(),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Cardholder Name',
-                border: OutlineInputBorder(),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Card added successfully!'),
-                  backgroundColor: Colors.purple,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
-            child: Text('Add Card'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showInvoicesDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Invoices'),
-        content: Text('View and download your payment invoices'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Downloading invoices...'),
-                  backgroundColor: Colors.red,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Download'),
           ),
         ],
       ),

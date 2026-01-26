@@ -298,7 +298,7 @@ class _SupportScreenState extends State<SupportScreen> {
                           Icon(Icons.phone, color: Colors.teal),
                           const SizedBox(width: 10),
                           Text(
-                            '+250 788 123 456',
+                            '+250 786711958',
                             style: TextStyle(
                               fontSize: 16,
                               color: Colors.grey[700],
@@ -546,7 +546,7 @@ class _SupportScreenState extends State<SupportScreen> {
 
   // WORKING CALL FUNCTION
   void _callSupport() async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: '+250788123456');
+    final Uri phoneUri = Uri(scheme: 'tel', path: '+250786711958');
     try {
       if (await canLaunchUrl(phoneUri)) {
         await launchUrl(phoneUri);
@@ -583,7 +583,7 @@ class _SupportScreenState extends State<SupportScreen> {
   void _sendSMS() async {
     final Uri smsUri = Uri(
       scheme: 'sms',
-      path: '+250788123456',
+      path: '+250786711958',
       queryParameters: {'body': 'Hi CleanRoute, I need help with: '},
     );
     try {
@@ -599,7 +599,7 @@ class _SupportScreenState extends State<SupportScreen> {
 
   // WORKING WHATSAPP FUNCTION
   void _openWhatsApp() async {
-    final phoneNumber = '250788123456'; // WhatsApp format (no + or spaces)
+    final phoneNumber = '250786711958'; // WhatsApp format (no + or spaces)
     final message = Uri.encodeComponent('Hi CleanRoute, I need support with my account.');
     
     // Try WhatsApp app first

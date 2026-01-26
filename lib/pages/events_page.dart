@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../services/database_helper.dart';
 import '../services/auth_service.dart';
+import '../screens/signin.dart';
 
 class EventsPage extends StatefulWidget {
   const EventsPage({Key? key}) : super(key: key);
@@ -22,10 +23,6 @@ class _EventsPageState extends State<EventsPage> {
   @override
   void initState() {
     super.initState();
-    // Initialize AuthService if not logged in (for testing)
-    if (!AuthService.isLoggedIn) {
-      AuthService.login('user@example.com', AuthService.currentUserRole ?? AuthService.UserRole.user);
-    }
     _loadEvents();
   }
 
@@ -56,12 +53,71 @@ class _EventsPageState extends State<EventsPage> {
     }
   }
 
+  bool _isLoggedIn() {
+    return AuthService.isLoggedIn;
+  }
+
   bool _isAdmin() {
     return AuthService.isAdmin();
   }
 
+  // Show login required dialog
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        icon: Icon(Icons.lock_outline, color: Colors.orange, size: 60),
+        title: Text(
+          'Login Required',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: Text(
+          'You need to be logged in to create events.\n\nPlease sign in to continue.',
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SignInScreen(),
+                ),
+              ).then((_) {
+                // Refresh state after returning from sign in
+                setState(() {});
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF2C5F6F),
+              padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            ),
+            child: Text(
+              'Sign In',
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   // Method to show create event form
   void _showCreateEventDialog(BuildContext context) {
+    // Check if user is logged in
+    if (!_isLoggedIn()) {
+      _showLoginRequiredDialog();
+      return;
+    }
+
     final _titleController = TextEditingController();
     final _descController = TextEditingController();
     final _locationController = TextEditingController();
@@ -74,7 +130,14 @@ class _EventsPageState extends State<EventsPage> {
         return StatefulBuilder(
           builder: (context, setState) {
             return AlertDialog(
-              title: Text('Create New Event'),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: Row(
+                children: [
+                  Icon(Icons.event, color: Colors.teal),
+                  SizedBox(width: 10),
+                  Text('Create New Event'),
+                ],
+              ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -83,48 +146,56 @@ class _EventsPageState extends State<EventsPage> {
                       controller: _titleController,
                       decoration: InputDecoration(
                         labelText: 'Event Title *',
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         hintText: 'Enter event title',
+                        prefixIcon: Icon(Icons.title),
                       ),
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 12),
                     TextField(
                       controller: _descController,
                       decoration: InputDecoration(
                         labelText: 'Description *',
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         hintText: 'Enter event description',
+                        prefixIcon: Icon(Icons.description),
                       ),
                       maxLines: 3,
                     ),
-                    SizedBox(height: 10),
+                    SizedBox(height: 12),
                     TextField(
                       controller: _locationController,
                       decoration: InputDecoration(
                         labelText: 'Location *',
-                        border: OutlineInputBorder(),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         hintText: 'Enter event location',
+                        prefixIcon: Icon(Icons.location_on),
                       ),
                     ),
-                    SizedBox(height: 10),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _timeController,
-                            decoration: InputDecoration(
-                              labelText: 'Time *',
-                              border: OutlineInputBorder(),
-                              hintText: 'e.g., 2:00 PM',
-                            ),
-                          ),
+                    SizedBox(height: 12),
+                    TextField(
+                      controller: _timeController,
+                      decoration: InputDecoration(
+                        labelText: 'Time *',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                      ],
+                        hintText: 'e.g., 2:00 PM',
+                        prefixIcon: Icon(Icons.access_time),
+                      ),
                     ),
-                    SizedBox(height: 15),
+                    SizedBox(height: 16),
                     ElevatedButton.icon(
                       icon: Icon(Icons.calendar_today),
-                      label: Text('Select Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}'),
+                      label: Text(
+                        'Select Date: ${_selectedDate.day}/${_selectedDate.month}/${_selectedDate.year}',
+                      ),
                       onPressed: () async {
                         final date = await showDatePicker(
                           context: context,
@@ -142,6 +213,9 @@ class _EventsPageState extends State<EventsPage> {
                         backgroundColor: Colors.teal,
                         foregroundColor: Colors.white,
                         minimumSize: Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ],
@@ -149,8 +223,14 @@ class _EventsPageState extends State<EventsPage> {
               ),
               actions: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text('Cancel', style: TextStyle(color: Colors.red)),
+                  onPressed: () {
+                    _titleController.dispose();
+                    _descController.dispose();
+                    _locationController.dispose();
+                    _timeController.dispose();
+                    Navigator.pop(context);
+                  },
+                  child: Text('Cancel', style: TextStyle(color: Colors.grey)),
                 ),
                 ElevatedButton(
                   onPressed: () async {
@@ -180,12 +260,23 @@ class _EventsPageState extends State<EventsPage> {
                         'rsvps': [],
                       });
 
+                      _titleController.dispose();
+                      _descController.dispose();
+                      _locationController.dispose();
+                      _timeController.dispose();
+                      
                       Navigator.pop(context);
                       _loadEvents(); // Refresh events
                       
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('✅ Event created successfully!'),
+                          content: Row(
+                            children: [
+                              Icon(Icons.check_circle, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text('Event created successfully!'),
+                            ],
+                          ),
                           backgroundColor: Colors.green,
                           duration: Duration(seconds: 2),
                         ),
@@ -203,6 +294,10 @@ class _EventsPageState extends State<EventsPage> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.teal,
                     foregroundColor: Colors.white,
+                    padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   child: Text('Create Event'),
                 ),
@@ -218,16 +313,15 @@ class _EventsPageState extends State<EventsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xffF8F8F8),
-      floatingActionButton: _isAdmin()
-          ? FloatingActionButton(
-              onPressed: () {
-                _showCreateEventDialog(context);
-              },
-              backgroundColor: Colors.teal,
-              child: Icon(Icons.add),
-              tooltip: 'Create New Event',
-            )
-          : null,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          _showCreateEventDialog(context);
+        },
+        backgroundColor: Colors.teal,
+        icon: Icon(Icons.add),
+        label: Text('Create Event'),
+        tooltip: 'Create New Event',
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -242,22 +336,34 @@ class _EventsPageState extends State<EventsPage> {
                     onPressed: () => Navigator.pop(context),
                   ),
                   SizedBox(width: 10),
-                  Text(
-                    "Events",
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        "Events",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      if (_isLoggedIn())
+                        Text(
+                          'Hi, ${AuthService.getCurrentUserName()}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                    ],
                   ),
                   Spacer(),
-                  if (_isAdmin())
-                    IconButton(
-                      icon: Icon(Icons.add, color: Colors.teal),
-                      onPressed: () {
-                        _showCreateEventDialog(context);
-                      },
-                      tooltip: 'Create Event',
-                    ),
+                  IconButton(
+                    icon: Icon(Icons.add_circle, color: Colors.teal, size: 28),
+                    onPressed: () {
+                      _showCreateEventDialog(context);
+                    },
+                    tooltip: 'Create Event',
+                  ),
                 ],
               ),
             ),
@@ -289,12 +395,12 @@ class _EventsPageState extends State<EventsPage> {
                         color: Colors.white,
                       ),
                       child: Row(
-                        children: const [
-                          Icon(Icons.location_on_outlined, color: Colors.black54),
+                        children: [
+                          Icon(Icons.location_on, color: Colors.teal),
                           SizedBox(width: 10),
                           Expanded(
                             child: Text(
-                              "Nyarugenge, Kiyovu",
+                              AuthService.getUserLocation(),
                               style: TextStyle(fontSize: 15),
                             ),
                           ),
@@ -306,7 +412,14 @@ class _EventsPageState extends State<EventsPage> {
 
                     Center(
                       child: TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Location change feature coming soon!'),
+                              backgroundColor: Colors.blue,
+                            ),
+                          );
+                        },
                         child: const Text(
                           "Change Location",
                           style: TextStyle(
@@ -390,18 +503,21 @@ class _EventsPageState extends State<EventsPage> {
                                           ),
                                         ),
                                       SizedBox(height: 20),
-                                      if (_isAdmin())
-                                        ElevatedButton.icon(
-                                          icon: Icon(Icons.add),
-                                          label: Text('Create Your First Event'),
-                                          onPressed: () {
-                                            _showCreateEventDialog(context);
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.teal,
-                                            foregroundColor: Colors.white,
+                                      ElevatedButton.icon(
+                                        icon: Icon(Icons.add),
+                                        label: Text('Create Your First Event'),
+                                        onPressed: () {
+                                          _showCreateEventDialog(context);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: Colors.teal,
+                                          foregroundColor: Colors.white,
+                                          padding: EdgeInsets.symmetric(
+                                            horizontal: 24,
+                                            vertical: 12,
                                           ),
                                         ),
+                                      ),
                                     ],
                                   ),
                                 )
@@ -507,6 +623,15 @@ class _EventsPageState extends State<EventsPage> {
                         color: Colors.grey.shade600,
                       ),
                     ),
+                    if (event['organizer'] != null)
+                      Text(
+                        'By ${event['organizer']}',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey[500],
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -550,17 +675,12 @@ class _EventsPageState extends State<EventsPage> {
               
               ElevatedButton(
                 onPressed: () async {
-                  try {
-                    if (!AuthService.isLoggedIn) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: Text('Please login to RSVP'),
-                          backgroundColor: Colors.orange,
-                        ),
-                      );
-                      return;
-                    }
+                  if (!_isLoggedIn()) {
+                    _showLoginRequiredDialog();
+                    return;
+                  }
 
+                  try {
                     final currentUser = AuthService.currentUser;
                     if (currentUser != null) {
                       await DatabaseService.instance.rsvpToEvent(
@@ -574,7 +694,13 @@ class _EventsPageState extends State<EventsPage> {
                       
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text('✅ You\'ve RSVP\'d to this event!'),
+                          content: Row(
+                            children: [
+                              Icon(Icons.check_circle, color: Colors.white),
+                              SizedBox(width: 8),
+                              Text('You\'ve RSVP\'d to this event!'),
+                            ],
+                          ),
                           backgroundColor: Colors.teal,
                         ),
                       );

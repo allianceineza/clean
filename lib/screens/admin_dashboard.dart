@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../services/database_helper.dart';
+import '../screens/adminuser_screen.dart';
 
 // ==================== MAIN ADMIN DASHBOARD ====================
 class AdminDashboard extends StatefulWidget {
@@ -374,294 +375,7 @@ class AdminHomeScreen extends StatelessWidget {
 }
 
 // ==================== ADMIN USERS SCREEN ====================
-class AdminUsersScreen extends StatefulWidget {
-  @override
-  State<AdminUsersScreen> createState() => _AdminUsersScreenState();
-}
 
-class _AdminUsersScreenState extends State<AdminUsersScreen> {
-  List<Map<String, dynamic>> users = [];
-  bool isLoading = true;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUsers();
-  }
-
-  Future<void> _loadUsers() async {
-    try {
-      final allUsers = await DatabaseService.instance.getAllUsers();
-      setState(() {
-        users = allUsers.map((user) => {
-          'id': user['id'],
-          'name': '${user['firstName']} ${user['lastName']}',
-          'email': user['email'],
-          'phone': user['phone'] ?? '',
-          'location': user['location'] ?? '',
-          'status': 'Active',
-          'joined': user['createdAt']?.split('T')[0] ?? '',
-          'unpaidBills': 'Rs. 0',
-        }).toList();
-        isLoading = false;
-      });
-    } catch (e) {
-      print('Error loading users: $e');
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.grey[50],
-      appBar: AppBar(
-        title: Text('Manage Users'),
-        backgroundColor: Colors.deepPurple,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.search),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: isLoading
-          ? Center(child: CircularProgressIndicator())
-          : users.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.people, size: 64, color: Colors.grey[400]),
-                      SizedBox(height: 16),
-                      Text(
-                        'No users found',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : ListView.builder(
-                  padding: EdgeInsets.all(15),
-                  itemCount: users.length,
-                  itemBuilder: (context, index) {
-                    final user = users[index];
-                    return Card(
-                      margin: EdgeInsets.only(bottom: 15),
-                      child: ListTile(
-                        leading: CircleAvatar(
-                          backgroundColor: Colors.deepPurple,
-                          child: Text(
-                            user['name'][0],
-                            style: TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        title: Text(
-                          user['name'],
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(user['email']),
-                            Text(user['location'], style: TextStyle(fontSize: 12)),
-                            Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: user['status'] == 'Active'
-                                        ? Colors.green
-                                        : Colors.red,
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    user['status'],
-                                    style: TextStyle(color: Colors.white, fontSize: 10),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                if (user['unpaidBills'] != 'Rs. 0')
-                                  Text(
-                                    'Unpaid: ${user['unpaidBills']}',
-                                    style: TextStyle(color: Colors.red, fontSize: 11),
-                                  ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        trailing: PopupMenuButton(
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              child: Text('View Details'),
-                              value: 'view',
-                            ),
-                            PopupMenuItem(
-                              child: Text('Edit User'),
-                              value: 'edit',
-                            ),
-                            PopupMenuItem(
-                              child: Text('Deactivate'),
-                              value: 'deactivate',
-                            ),
-                            PopupMenuItem(
-                              child: Text('Send Notification'),
-                              value: 'notify',
-                            ),
-                          ],
-                          onSelected: (value) {
-                            _handleUserAction(context, value.toString(), user);
-                          },
-                        ),
-                      ),
-                    );
-                  },
-                ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => AddUserScreen()),
-          );
-        },
-        backgroundColor: Colors.deepPurple,
-        child: Icon(Icons.add),
-      ),
-    );
-  }
-
-  void _handleUserAction(BuildContext context, String action, Map user) {
-    switch (action) {
-      case 'view':
-        _showUserDetails(context, user);
-        break;
-      case 'edit':
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Edit user: ${user['name']}')),
-        );
-        break;
-      case 'deactivate':
-        _confirmDeactivate(context, user);
-        break;
-      case 'notify':
-        _sendNotification(context, user);
-        break;
-    }
-  }
-
-  void _showUserDetails(BuildContext context, Map user) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text(user['name']),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _buildDetailRow('Email:', user['email']),
-              _buildDetailRow('Phone:', user['phone']),
-              _buildDetailRow('Location:', user['location']),
-              _buildDetailRow('Status:', user['status']),
-              _buildDetailRow('Joined:', user['joined']),
-              _buildDetailRow('Unpaid Bills:', user['unpaidBills']),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(width: 8),
-          Expanded(child: Text(value)),
-        ],
-      ),
-    );
-  }
-
-  void _confirmDeactivate(BuildContext context, Map user) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Deactivate User'),
-        content: Text('Are you sure you want to deactivate ${user['name']}?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('${user['name']} deactivated')),
-              );
-            },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Deactivate'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _sendNotification(BuildContext context, Map user) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Send Notification'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              decoration: InputDecoration(
-                labelText: 'Message',
-                border: OutlineInputBorder(),
-              ),
-              maxLines: 3,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Notification sent to ${user['name']}')),
-              );
-            },
-            child: Text('Send'),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 // ==================== ADMIN PICKUP REQUESTS SCREEN ====================
 class AdminPickupRequestsScreen extends StatefulWidget {
@@ -2013,13 +1727,24 @@ class AdminAnalyticsScreen extends StatelessWidget {
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 15),
-            _buildMetricCard(
-              'New Users',
-              '45',
-              '+12% from yesterday',
-              Colors.blue,
-              Icons.person_add,
-            ),
+            GestureDetector(
+  onTap: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const AdminUsersScreen(),
+      ),
+    );
+  },
+  child: _buildMetricCard(
+    'New Users',
+    '45',
+    '+12% from yesterday',
+    Colors.blue,
+    Icons.person_add,
+  ),
+),
+
             _buildMetricCard(
               'Pickups Completed',
               '128',

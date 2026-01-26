@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'recyclingtips.dart';
 import '../database/database_helper.dart';
 import '../services/database_helper.dart' as db_service;
+import '../services/auth_service.dart';
+import '../screens/signin.dart'; // Import SignInScreen
 
 class RecyclePage extends StatefulWidget {
   const RecyclePage({Key? key}) : super(key: key);
@@ -144,7 +146,16 @@ class _RecyclePageState extends State<RecyclePage> {
     );
   }
 
+  // Check if user is logged in before requesting pickup
   void _requestPickup() async {
+    // Check authentication status using your AuthService
+    if (!AuthService.isLoggedIn) {
+      // User is not logged in - show login dialog
+      _showLoginRequiredDialog();
+      return;
+    }
+
+    // User is logged in - proceed with pickup request
     int total = DatabaseHelper.getTotalItems();
     
     if (total == 0) {
@@ -159,6 +170,62 @@ class _RecyclePageState extends State<RecyclePage> {
       return;
     }
 
+    _showPickupDialog();
+  }
+
+  // Show login required dialog
+  void _showLoginRequiredDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        icon: const Icon(Icons.lock_outline, color: Colors.orange, size: 60),
+        title: const Text(
+          "Login Required",
+          textAlign: TextAlign.center,
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        content: const Text(
+          "You need to be logged in to schedule a pickup.\n\nPlease sign in or create an account to continue.",
+          textAlign: TextAlign.center,
+        ),
+        actionsAlignment: MainAxisAlignment.center,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Color(0xFF2C5F6F),
+              minimumSize: const Size(120, 45),
+            ),
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              // Navigate to sign in screen
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const SignInScreen(),
+                ),
+              ).then((_) {
+                // Refresh state when returning from sign in
+                setState(() {});
+              });
+            },
+            child: const Text(
+              "Sign In",
+              style: TextStyle(color: Colors.white),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Show pickup dialog (only called when user is authenticated)
+  void _showPickupDialog() {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -314,7 +381,10 @@ class _RecyclePageState extends State<RecyclePage> {
               Navigator.pop(context);
               await _submitPickupRequest();
             },
-            child: const Text("Schedule Pickup"),
+            child: const Text(
+              "Schedule Pickup",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),
@@ -323,7 +393,14 @@ class _RecyclePageState extends State<RecyclePage> {
 
   Future<void> _submitPickupRequest() async {
     try {
-      final userId = 2; // Use actual user ID from your auth system
+      // Get current user data from AuthService
+      if (AuthService.currentUserId == null) {
+        throw Exception('User not logged in');
+      }
+      
+      final userId = AuthService.currentUserId!;
+      final userEmail = AuthService.currentUserEmail ?? 'Unknown';
+      final userName = AuthService.getCurrentUserName();
       
       // Calculate totals
       int total = DatabaseHelper.getTotalItems();
@@ -337,6 +414,8 @@ class _RecyclePageState extends State<RecyclePage> {
       // Prepare pickup data
       final pickupData = {
         'userId': userId,
+        'userEmail': userEmail,
+        'userName': userName,
         'location': _locationController.text,
         'date': _dateController.text,
         'time': _timeController.text,
@@ -344,12 +423,18 @@ class _RecyclePageState extends State<RecyclePage> {
         'status': 'Pending',
         'totalItems': total,
         'itemsBreakdown': itemsBreakdown,
+        'createdAt': DateTime.now().toIso8601String(),
       };
       
       // Save to database
       await db_service.DatabaseService.instance.createPickupRequest(pickupData);
       
-      // Clear and reset
+      // Store location, date, and time before clearing
+      final location = _locationController.text;
+      final date = _dateController.text;
+      final time = _timeController.text;
+      
+      // Clear controllers
       _locationController.clear();
       _dateController.clear();
       _timeController.clear();
@@ -371,10 +456,11 @@ class _RecyclePageState extends State<RecyclePage> {
             ),
             content: Text(
               "✅ Your recycling pickup has been scheduled successfully!\n\n"
+              "👤 Name: $userName\n"
               "📦 Total items: $total\n"
               "🗑️ Items: ${itemsBreakdown.isEmpty ? 'General Waste' : itemsBreakdown}\n"
-              "📍 Location: ${_locationController.text}\n"
-              "📅 Date: ${_dateController.text} at ${_timeController.text}\n\n"
+              "📍 Location: $location\n"
+              "📅 Date: $date at $time\n\n"
               "👨‍💼 The admin has been notified and will review your request.\n"
               "You can track status in your profile.",
               textAlign: TextAlign.center,
@@ -387,7 +473,10 @@ class _RecyclePageState extends State<RecyclePage> {
                   minimumSize: const Size(120, 45),
                 ),
                 onPressed: () => Navigator.pop(context),
-                child: const Text("Done"),
+                child: const Text(
+                  "Done",
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
             ],
           ),

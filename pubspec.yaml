@@ -1,8 +1,9 @@
 name: clean_route
-description: Clean Route App
+description: A new Flutter project.
+
 publish_to: 'none'
+
 version: 1.0.0+1
- 
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -10,17 +11,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  
-  # Core dependencies
-  sqflite: ^2.0.0+4
-  sqflite_common_ffi: 2.4.0+1  # <-- ADD THIS LINE HERE
-  path: ^1.8.3
-  path_provider: ^2.1.1
-  shared_preferences: ^2.2.2
-  
-  # Add these missing packages
-  intl: ^0.19.0          # For DateFormat
-  url_launcher: ^6.2.1   # For launching URLs, phone, email
+
+  intl: ^0.19.0
+  url_launcher: ^6.3.0
+  path_provider: ^2.1.2
+  sqlite3: ^2.4.0
 
 dev_dependencies:
   flutter_test:

@@ -11,6 +11,15 @@ class BlogPage extends StatefulWidget {
 class _BlogPageState extends State<BlogPage> {
   List<Map<String, dynamic>> _blogPosts = [];
   bool _isLoading = true;
+  String _selectedCategory = 'All';
+
+  final List<String> _categories = [
+    'All',
+    'Environment',
+    'Recycling',
+    'Sustainability',
+    'Rwanda',
+  ];
 
   @override
   void initState() {
@@ -21,525 +30,366 @@ class _BlogPageState extends State<BlogPage> {
   Future<void> _loadBlogPosts() async {
     try {
       final posts = await DatabaseService.instance.getBlogPosts();
-      setState(() {
-        _blogPosts = posts;
-        _isLoading = false;
-      });
+      
+      // If no posts in database, add sample posts
+      if (posts.isEmpty) {
+        setState(() {
+          _blogPosts = [
+            {
+              'title': 'Recycling Tips for Rwanda Households',
+              'shortDescription': 'Simple ways to reduce waste and recycle effectively at home',
+              'category': 'Recycling',
+              'image': 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=400',
+              'author': 'CleanRoute Team',
+              'date': 'Jan 26, 2026',
+              'readTime': '5 min read',
+            },
+            {
+              'title': 'How Trees Fight Climate Change in Rwanda',
+              'shortDescription': 'Understanding the impact of reforestation on our environment',
+              'category': 'Environment',
+              'image': 'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=400',
+              'author': 'Green Team',
+              'date': 'Jan 25, 2026',
+              'readTime': '7 min read',
+            },
+            {
+              'title': 'Sustainable Living in Kigali',
+              'shortDescription': 'Practical tips for an eco-friendly lifestyle in the city',
+              'category': 'Sustainability',
+              'image': 'https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?w=400',
+              'author': 'Eco Warriors',
+              'date': 'Jan 24, 2026',
+              'readTime': '6 min read',
+            },
+            {
+              'title': 'Community Clean-Up Success Stories',
+              'shortDescription': 'How local communities are making a difference together',
+              'category': 'Rwanda',
+              'image': 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb6?w=400',
+              'author': 'Community Team',
+              'date': 'Jan 23, 2026',
+              'readTime': '4 min read',
+            },
+            {
+              'title': 'Plastic Pollution Solutions',
+              'shortDescription': 'Innovative ways to reduce plastic waste in Rwanda',
+              'category': 'Environment',
+              'image': 'https://images.unsplash.com/photo-1621451537084-482c73073a0f?w=400',
+              'author': 'CleanRoute Team',
+              'date': 'Jan 22, 2026',
+              'readTime': '5 min read',
+            },
+          ];
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _blogPosts = posts;
+          _isLoading = false;
+        });
+      }
     } catch (e) {
-      print('Error loading blog posts: $e');
+      // Use sample data on error
       setState(() {
+        _blogPosts = [
+          {
+            'title': 'Recycling Tips for Rwanda Households',
+            'shortDescription': 'Simple ways to reduce waste and recycle effectively at home',
+            'category': 'Recycling',
+            'image': 'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=400',
+            'author': 'CleanRoute Team',
+            'date': 'Jan 26, 2026',
+            'readTime': '5 min read',
+          },
+        ];
         _isLoading = false;
       });
     }
   }
 
-
-  void _showBlogDetails(Map<String, dynamic> post) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BlogDetailPage(blogPost: post),
-      ),
-    );
+  List<Map<String, dynamic>> get _filteredPosts {
+    if (_selectedCategory == 'All') return _blogPosts;
+    return _blogPosts
+        .where((post) => post['category'] == _selectedCategory)
+        .toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return Scaffold(
-        appBar: AppBar(
-          title: const Text('Blog'),
-          backgroundColor: Colors.teal,
-        ),
-        body: const Center(
-          child: CircularProgressIndicator(),
-        ),
-      );
-    }
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Blog'),
-        backgroundColor: Colors.teal,
-      ),
-      body: Column(
-        children: [
-          // Header Section
-          Container(
-            padding: const EdgeInsets.all(20),
-            color: Colors.teal.shade50,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'DIY Blog Posts',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Turn old items into something useful with these fun DIY ideas.',
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: Colors.teal.shade700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Blog Posts List
-          Expanded(
-            child: _blogPosts.isEmpty
-                ? const Center(
-                    child: Text('No blog posts available'),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _blogPosts.length,
-                    itemBuilder: (context, index) {
-                      final post = _blogPosts[index];
-                      return Column(
-                        children: [
-                          GestureDetector(
-                            onTap: () => _showBlogDetails(post),
-                            child: _buildBlogCard(post),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBlogCard(Map<String, dynamic> post) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Image placeholder (you can replace with actual images)
-          Container(
-            height: 180,
-            decoration: BoxDecoration(
-              color: Colors.teal.shade100,
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
-              ),
-              image: const DecorationImage(
-                image: AssetImage('assets/diy_placeholder.jpg'), // Add a placeholder image
-                fit: BoxFit.cover,
-              ),
-            ),
-            child: Center(
-              child: Icon(
-                Icons.construction,
-                size: 60,
-                color: Colors.teal.shade800.withOpacity(0.7),
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.teal.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        post['category'] ?? 'DIY',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                          color: Colors.teal.shade700,
-                        ),
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      post['date'] ?? '',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  post['title'] ?? '',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.teal,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  post['shortDescription'] ?? '',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.grey.shade700,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 12,
-                      backgroundColor: Colors.teal.shade100,
-                      child: Icon(
-                        Icons.person,
-                        size: 14,
-                        color: Colors.teal,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'By ${post['author'] ?? ''}',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey.shade600,
-                      ),
-                    ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        Icon(
-                          Icons.arrow_forward,
-                          size: 16,
-                          color: Colors.teal,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Read More',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.teal,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class BlogDetailPage extends StatelessWidget {
-  final Map<String, dynamic> blogPost;
-
-  const BlogDetailPage({Key? key, required this.blogPost}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Blog Post'),
-        backgroundColor: Colors.teal,
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+      backgroundColor: Colors.grey[50],
+      body: SafeArea(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Category and Date
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.teal.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    blogPost['category'] ?? 'DIY',
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.teal.shade700,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  blogPost['date'] ?? '',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Title
-            Text(
-              blogPost['title'] ?? '',
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.bold,
-                color: Colors.teal,
-              ),
-            ),
-            const SizedBox(height: 8),
-
-            // Author
-            Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: Colors.teal.shade100,
-                  child: Icon(
-                    Icons.person,
-                    size: 18,
-                    color: Colors.teal,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  blogPost['author'] ?? '',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.teal,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 30),
-
-            // Short Description
+            // Header
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.teal.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.teal.shade100),
-              ),
-              child: Text(
-                blogPost['shortDescription'] ?? '',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.teal.shade800,
-                  height: 1.5,
-                ),
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            // Joke Section
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.amber.shade50,
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.amber.shade200),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Icon(
-                        Icons.emoji_emotions,
-                        color: Colors.amber.shade700,
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'Blog & News',
+                            style: TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2C3E50),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Latest updates and stories',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Recycling Humor',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.amber.shade800,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green[50],
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.article,
+                          color: Colors.green[700],
+                          size: 28,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    blogPost['joke'] ?? '',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontStyle: FontStyle.italic,
-                      color: Colors.amber.shade900,
-                      height: 1.4,
+                  const SizedBox(height: 20),
+                  
+                  // Category Filter
+                  SizedBox(
+                    height: 40,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _categories.length,
+                      itemBuilder: (context, index) {
+                        final category = _categories[index];
+                        final isSelected = _selectedCategory == category;
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedCategory = category;
+                              });
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 8,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.green[700]
+                                    : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                category,
+                                style: TextStyle(
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.grey[700],
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w500,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 40),
 
-            // Materials Required
-            const Text(
-              'Materials Required:',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.teal,
+            // Blog Posts
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : _filteredPosts.isEmpty
+                      ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.article_outlined,
+                                size: 80,
+                                color: Colors.grey[400],
+                              ),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No blog posts yet',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Check back soon for updates!',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: Colors.grey[500],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      : RefreshIndicator(
+                          onRefresh: _loadBlogPosts,
+                          child: ListView.builder(
+                            padding: const EdgeInsets.all(20),
+                            itemCount: _filteredPosts.length,
+                            itemBuilder: (context, index) {
+                              return _buildBlogCard(_filteredPosts[index]);
+                            },
+                          ),
+                        ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBlogCard(Map<String, dynamic> post) {
+    final imageUrl = post['image'] ??
+        'https://images.unsplash.com/photo-1532996122724-e3c354a0b15b?w=400';
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => BlogDetailPage(blogPost: post),
+        ),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.06),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Image
+            ClipRRect(
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                bottomLeft: Radius.circular(12),
+              ),
+              child: Image.network(
+                imageUrl,
+                width: 110,
+                height: 110,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: 110,
+                    height: 110,
+                    color: Colors.grey[300],
+                    child: Icon(
+                      Icons.image,
+                      size: 40,
+                      color: Colors.grey[500],
+                    ),
+                  );
+                },
               ),
             ),
-            const SizedBox(height: 15),
-            ...(blogPost['materials'] as List<dynamic>? ?? []).asMap().entries.map((entry) {
-              final index = entry.key;
-              final material = entry.value as String;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
+
+            // Content
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Category Badge
                     Container(
-                      width: 24,
-                      height: 24,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: Colors.teal,
+                        color: Colors.green.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: Center(
-                        child: Text(
-                          '${index + 1}',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
+                      child: Text(
+                        post['category'] ?? 'Environment',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.green[700],
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        material,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey.shade800,
-                          height: 1.4,
-                        ),
+                    const SizedBox(height: 8),
+
+                    // Title
+                    Text(
+                      post['title'] ?? 'Blog Post Title',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF2C3E50),
+                        height: 1.3,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+
+                    // Description
+                    Text(
+                      post['shortDescription'] ??
+                          'Learn how small actions make big impact.',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey[600],
+                        height: 1.4,
                       ),
                     ),
                   ],
                 ),
-              );
-            }).toList(),
-            const SizedBox(height: 40),
-
-            // Steps
-            const Text(
-              'Steps:',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.teal,
               ),
             ),
-            const SizedBox(height: 15),
-            ...(blogPost['steps'] as List<dynamic>? ?? []).asMap().entries.map((entry) {
-              final index = entry.key;
-              final step = entry.value as String;
-              return Card(
-                margin: const EdgeInsets.only(bottom: 16),
-                elevation: 2,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          color: Colors.teal,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Center(
-                          child: Text(
-                            '${index + 1}',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Text(
-                          step,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey.shade800,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
-            const SizedBox(height: 30),
-
-            // Share Button
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Share functionality
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Blog post shared!'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.share),
-                label: const Text('Share This DIY Idea'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.teal,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -547,26 +397,247 @@ class BlogDetailPage extends StatelessWidget {
   }
 }
 
-class BlogPost {
-  final String title;
-  final String shortDescription;
-  final String category;
-  final String date;
-  final String author;
-  final List<String> materials;
-  final List<String> steps;
-  final String joke;
-  final String imageAsset;
+// ==================== BLOG DETAIL PAGE ====================
+class BlogDetailPage extends StatelessWidget {
+  final Map<String, dynamic> blogPost;
 
-  BlogPost({
-    required this.title,
-    required this.shortDescription,
-    required this.category,
-    required this.date,
-    required this.author,
-    required this.materials,
-    required this.steps,
-    required this.joke,
-    required this.imageAsset,
-  });
+  const BlogDetailPage({Key? key, required this.blogPost}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = blogPost['image'] ??
+        'https://images.unsplash.com/photo-1542601906990-b4d3fb778b09?w=800';
+
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: CustomScrollView(
+        slivers: [
+          // App Bar with Image
+          SliverAppBar(
+            expandedHeight: 300,
+            pinned: true,
+            backgroundColor: Colors.green[700],
+            leading: Container(
+              margin: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back, color: Colors.black),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ),
+            flexibleSpace: FlexibleSpaceBar(
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  Image.network(
+                    imageUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        color: Colors.grey[300],
+                        child: Icon(
+                          Icons.image,
+                          size: 80,
+                          color: Colors.grey[500],
+                        ),
+                      );
+                    },
+                  ),
+                  // Gradient overlay
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withOpacity(0.7),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Content
+          SliverToBoxAdapter(
+            child: Container(
+              color: Colors.white,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Category Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green[100],
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            blogPost['category'] ?? 'Environment',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green[700],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Title
+                        Text(
+                          blogPost['title'] ?? 'Blog Post Title',
+                          style: const TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF2C3E50),
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Author and Date
+                        Row(
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundColor: Colors.green[100],
+                              child: Icon(
+                                Icons.person,
+                                color: Colors.green[700],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  blogPost['author'] ?? 'CleanRoute Team',
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF2C3E50),
+                                  ),
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      blogPost['date'] ?? 'Jan 26, 2026',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                    Text(
+                                      ' • ${blogPost['readTime'] ?? '5 min read'}',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Content
+                        Text(
+                          blogPost['content'] ?? blogPost['shortDescription'] ??
+                              'This is the blog post content. Add more detailed information about the topic here.',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[800],
+                            height: 1.8,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+
+                        // Share Section
+                        Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            color: Colors.green[50],
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.share,
+                                    color: Colors.green[700],
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Share this article',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[700],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                children: [
+                                  _buildShareButton(
+                                    Icons.facebook,
+                                    Colors.blue[700]!,
+                                  ),
+                                  _buildShareButton(
+                                    Icons.share,
+                                    Colors.green[700]!,
+                                  ),
+                                  _buildShareButton(
+                                    Icons.link,
+                                    Colors.grey[700]!,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildShareButton(IconData icon, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey[300]!),
+      ),
+      child: Icon(icon, color: color, size: 24),
+    );
+  }
 }
