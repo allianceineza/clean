@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import '../widgets/bill_card.dart';
 import '../widgets/tree_card.dart';
 import '../widgets/action_button.dart';
-import '../services/auth_service.dart'; // Correct import
+import '../services/auth_service.dart';
 import 'authentication.dart'; 
 import 'register.dart';
 import 'signin.dart';
+import '../pages/whatwedo.dart';
+
 
 class HomeScreen extends StatelessWidget {
   final Function(int)? onTabChange;
@@ -99,6 +101,20 @@ class HomeScreen extends StatelessWidget {
                   ],
                 ),
               ),
+              
+              const SizedBox(height: 25),
+              
+              // ADD THIS: What We Do Section with Images
+              // Option 1: Horizontal scrollable cards with images
+              
+              
+              const WhatWeDoSection(),
+
+              
+              // OR Option 2: Simple banner with background image (comment out Option 1 and uncomment this)
+              // const WhatWeDoBanner(),
+              
+              const SizedBox(height: 25),
 
               // Tree Card
               const TreeCard(),

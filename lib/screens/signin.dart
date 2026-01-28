@@ -35,7 +35,7 @@ class _SignInScreenState extends State<SignInScreen> {
     // Check if admin credentials
     if (email == 'admin@cleanroute.com' && password == 'admin123') {
       // Admin login
-      AuthService.login(email, UserRole.admin);
+      AuthService.login(email, UserRole.admin);                              
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => AdminDashboard()),

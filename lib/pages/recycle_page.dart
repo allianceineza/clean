@@ -88,8 +88,13 @@ class _RecyclePageState extends State<RecyclePage> {
     DatabaseHelper.updateItemCount(category, newCount);
   }
 
+  // FIXED: Calculate total from items map instead of database
+  int _getTotalItems() {
+    return items.values.fold(0, (sum, count) => sum + count);
+  }
+
   void _calculate() {
-    int total = DatabaseHelper.getTotalItems();
+    int total = _getTotalItems(); // FIXED: Use local calculation
     
     showDialog(
       context: context,
@@ -156,7 +161,7 @@ class _RecyclePageState extends State<RecyclePage> {
     }
 
     // User is logged in - proceed with pickup request
-    int total = DatabaseHelper.getTotalItems();
+    int total = _getTotalItems(); // FIXED: Use local calculation
     
     if (total == 0) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -402,8 +407,8 @@ class _RecyclePageState extends State<RecyclePage> {
       final userEmail = AuthService.currentUserEmail ?? 'Unknown';
       final userName = AuthService.getCurrentUserName();
       
-      // Calculate totals
-      int total = DatabaseHelper.getTotalItems();
+      // Calculate totals - FIXED: Use local calculation
+      int total = _getTotalItems();
       
       // Create items breakdown string
       String itemsBreakdown = items.entries
@@ -511,7 +516,7 @@ class _RecyclePageState extends State<RecyclePage> {
 
   @override
   Widget build(BuildContext context) {
-    final totalItems = DatabaseHelper.getTotalItems();
+    final totalItems = _getTotalItems(); // FIXED: Use local calculation
     
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -609,7 +614,7 @@ class _RecyclePageState extends State<RecyclePage> {
                 ),
                 const SizedBox(height: 16),
 
-                // Items grid
+                // Items grid - FIXED: Changed childAspectRatio
                 GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -617,7 +622,7 @@ class _RecyclePageState extends State<RecyclePage> {
                     crossAxisCount: 2,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,
-                    childAspectRatio: 2.5,
+                    childAspectRatio: 1.5, // FIXED: Changed from 2.5 to 1.5
                   ),
                   itemCount: items.length,
                   itemBuilder: (context, index) {
@@ -744,6 +749,7 @@ class _RecyclePageState extends State<RecyclePage> {
     );
   }
 
+  // FIXED: Completely redesigned layout to prevent overflow
   Widget _buildRecycleItem(String item) {
     return Container(
       decoration: BoxDecoration(
@@ -758,51 +764,46 @@ class _RecyclePageState extends State<RecyclePage> {
         ],
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Row(
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: itemColors[item]?.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                itemIcons[item],
-                color: itemColors[item],
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
+            // Top section: Icon and name
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: itemColors[item]?.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    itemIcons[item],
+                    color: itemColors[item],
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
                     item,
                     style: const TextStyle(
                       fontWeight: FontWeight.w500,
-                      fontSize: 14,
+                      fontSize: 13,
                     ),
-                    maxLines: 1,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  Text(
-                    "${items[item]} items",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
+            // Bottom section: Counter controls
             Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.remove, size: 18),
+                  icon: const Icon(Icons.remove, size: 16),
                   onPressed: () {
                     if (items[item]! > 0) {
                       _updateItemCount(item, items[item]! - 1);
@@ -811,29 +812,25 @@ class _RecyclePageState extends State<RecyclePage> {
                   style: IconButton.styleFrom(
                     backgroundColor: Colors.grey[100],
                     padding: const EdgeInsets.all(4),
-                    minimumSize: const Size(32, 32),
+                    minimumSize: const Size(28, 28),
                   ),
                 ),
-                Container(
-                  width: 32,
-                  alignment: Alignment.center,
-                  child: Text(
-                    items[item]!.toString(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                Text(
+                  items[item]!.toString(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.add, size: 18),
+                  icon: const Icon(Icons.add, size: 16),
                   onPressed: () {
                     _updateItemCount(item, items[item]! + 1);
                   },
                   style: IconButton.styleFrom(
                     backgroundColor: itemColors[item]?.withOpacity(0.1),
                     padding: const EdgeInsets.all(4),
-                    minimumSize: const Size(32, 32),
+                    minimumSize: const Size(28, 28),
                   ),
                 ),
               ],

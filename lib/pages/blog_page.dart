@@ -397,7 +397,7 @@ class _BlogPageState extends State<BlogPage> {
   }
 }
 
-// ==================== BLOG DETAIL PAGE ====================
+// BLOG DETAIL PAGE 
 class BlogDetailPage extends StatelessWidget {
   final Map<String, dynamic> blogPost;
 
@@ -556,7 +556,7 @@ class BlogDetailPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 24),
 
-                        // Content
+                        
                         Text(
                           blogPost['content'] ?? blogPost['shortDescription'] ??
                               'This is the blog post content. Add more detailed information about the topic here.',

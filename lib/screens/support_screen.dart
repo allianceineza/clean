@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../utils/url_launcher_helper.dart'; // ADD THIS: Import the helper
 
 class SupportScreen extends StatefulWidget {
   const SupportScreen({Key? key}) : super(key: key);
@@ -544,82 +545,37 @@ class _SupportScreenState extends State<SupportScreen> {
     );
   }
 
-  // WORKING CALL FUNCTION
-  void _callSupport() async {
-    final Uri phoneUri = Uri(scheme: 'tel', path: '+250786711958');
-    try {
-      if (await canLaunchUrl(phoneUri)) {
-        await launchUrl(phoneUri);
-      } else {
-        _showErrorDialog('Unable to make call. Please dial +250 788 123 456 manually.');
-      }
-    } catch (e) {
-      _showErrorDialog('Unable to make call. Please dial +250 788 123 456 manually.');
-    }
+  // ✅ UPDATED: Using UrlLauncherHelper for better error handling
+  void _callSupport() {
+    UrlLauncherHelper.launchPhone(context, '+250786711958');
   }
 
-  // WORKING EMAIL FUNCTION
-  void _sendEmail() async {
-    final Uri emailUri = Uri(
-      scheme: 'mailto',
-      path: 'support@cleanroute.com',
-      queryParameters: {
-        'subject': 'Support Request - CleanRoute',
-        'body': 'Hello CleanRoute Support Team,\n\n',
-      },
+  // ✅ UPDATED: Using UrlLauncherHelper for better error handling
+  void _sendEmail() {
+    UrlLauncherHelper.launchEmail(
+      context,
+      email: 'support@cleanroute.com',
+      subject: 'Support Request - CleanRoute',
+      body: 'Hello CleanRoute Support Team,\n\n',
     );
-    try {
-      if (await canLaunchUrl(emailUri)) {
-        await launchUrl(emailUri);
-      } else {
-        _showErrorDialog('Unable to open email app. Please email us at support@cleanroute.com');
-      }
-    } catch (e) {
-      _showErrorDialog('Unable to open email app. Please email us at support@cleanroute.com');
-    }
   }
 
-  // WORKING SMS FUNCTION
-  void _sendSMS() async {
-    final Uri smsUri = Uri(
-      scheme: 'sms',
-      path: '+250786711958',
-      queryParameters: {'body': 'Hi CleanRoute, I need help with: '},
+  // ✅ UPDATED: Using UrlLauncherHelper for better error handling
+  void _sendSMS() {
+    UrlLauncherHelper.launchSMS(
+      context,
+      phoneNumber: '+250786711958',
+      message: 'Hi CleanRoute, I need help with: ',
     );
-    try {
-      if (await canLaunchUrl(smsUri)) {
-        await launchUrl(smsUri);
-      } else {
-        _showErrorDialog('Unable to open SMS app. Please text +250 788 123 456 manually.');
-      }
-    } catch (e) {
-      _showErrorDialog('Unable to open SMS app. Please text +250 788 123 456 manually.');
-    }
   }
 
-  // WORKING WHATSAPP FUNCTION
-  void _openWhatsApp() async {
-    final phoneNumber = '250786711958'; // WhatsApp format (no + or spaces)
-    final message = Uri.encodeComponent('Hi CleanRoute, I need support with my account.');
-    
-    // Try WhatsApp app first
-    final Uri whatsappUri = Uri.parse('whatsapp://send?phone=$phoneNumber&text=$message');
-    
-    try {
-      if (await canLaunchUrl(whatsappUri)) {
-        await launchUrl(whatsappUri);
-      } else {
-        // Fallback to web WhatsApp
-        final Uri webWhatsappUri = Uri.parse('https://wa.me/$phoneNumber?text=$message');
-        if (await canLaunchUrl(webWhatsappUri)) {
-          await launchUrl(webWhatsappUri, mode: LaunchMode.externalApplication);
-        } else {
-          _showErrorDialog('Unable to open WhatsApp. Please message us on +250 788 123 456');
-        }
-      }
-    } catch (e) {
-      _showErrorDialog('Unable to open WhatsApp. Please message us on +250 788 123 456');
-    }
+  // ✅ UPDATED: Using UrlLauncherHelper for better error handling
+  void _openWhatsApp() {
+    UrlLauncherHelper.launchWhatsApp(
+      context,
+      phoneNumber: '+250786711958',
+      message: 'Hi CleanRoute, I need support with my account.',
+    );
   }
 
   // WORKING LIVE CHAT FUNCTION
@@ -674,28 +630,6 @@ class _SupportScreenState extends State<SupportScreen> {
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('Close'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(Icons.info, color: Colors.orange),
-            const SizedBox(width: 10),
-            Text('Information'),
-          ],
-        ),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text('OK'),
           ),
         ],
       ),
